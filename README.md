@@ -50,7 +50,8 @@
 - Powered by Speechmatics real-time transcription
 
 ### 🌐 Multi-Language Support
-- English, Swahili, Hausa, Yoruba, French, Amharic
+- English (live demo)
+- Swahili, Hausa, Yoruba, French, Amharic (ready for production)
 - AI responds in user's preferred language
 - Expanding to 20+ African languages
 
