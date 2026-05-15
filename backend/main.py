@@ -37,7 +37,7 @@ def get_llm(temperature=0.3):
 class LegalQuery(BaseModel):
     problem: str
     country: str = "Nigeria"
-    language: str = "English"
+    language: str = "English"  # English, Swahili, Hausa, Yoruba, French
 
 class LegalResponse(BaseModel):
     domain: str
@@ -80,11 +80,11 @@ Format: {{
     return json.loads(res.content.strip())
 
 # ── Agent 3: ADVISOR — plain language advice + next steps ────────────────────
-def advisor_agent(problem: str, intake: dict, research: dict, country: str) -> dict:
+def advisor_agent(problem: str, intake: dict, research: dict, country: str, language: str = "English") -> dict:
     llm = get_llm(temperature=0.4)
     messages = [
         SystemMessage(content=f"""You are a compassionate legal advisor helping everyday citizens in {country}.
-Write clear, plain-language advice. Avoid legal jargon.
+Write clear, plain-language advice in {language}. Avoid legal jargon.
 Respond ONLY with valid JSON, no markdown.
 Format: {{
   "summary": "2-3 sentence plain summary of their situation",
@@ -101,11 +101,11 @@ Laws: {json.dumps(research['applicable_laws'])}""")
     return json.loads(res.content.strip())
 
 # ── Agent 4: DOCUMENT — generate a formal legal letter ───────────────────────
-def document_agent(problem: str, intake: dict, advisor: dict, country: str) -> str:
+def document_agent(problem: str, intake: dict, advisor: dict, country: str, language: str = "English") -> str:
     llm = get_llm(temperature=0.3)
     messages = [
         SystemMessage(content=f"""You are a legal document drafter for {country}.
-Write a formal legal letter the user can send to the relevant party or authority.
+Write a formal legal letter in {language} that the user can send to the relevant party or authority.
 Use proper legal letter format with [SENDER NAME], [DATE], [RECIPIENT] placeholders.
 The letter should be firm, professional, and cite the relevant legal basis.
 Return ONLY the letter text, no JSON, no extra commentary."""),
@@ -124,8 +124,8 @@ async def analyze(query: LegalQuery):
         # Run the 4-agent pipeline sequentially
         intake   = intake_agent(query.problem, query.country)
         research = research_agent(query.problem, intake, query.country)
-        advisor  = advisor_agent(query.problem, intake, research, query.country)
-        letter   = document_agent(query.problem, intake, advisor, query.country)
+        advisor  = advisor_agent(query.problem, intake, research, query.country, query.language)
+        letter   = document_agent(query.problem, intake, advisor, query.country, query.language)
 
         return LegalResponse(
             domain=f"{intake['domain']} — {intake.get('sub_domain', '')}",
